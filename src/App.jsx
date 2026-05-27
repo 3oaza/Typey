@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { open } from '@tauri-apps/plugin-dialog';
 import { useFontStore } from "./store";
 import { FontList } from "./components/FontList";
@@ -11,6 +11,9 @@ function App() {
   } = useFontStore();
 
   const [darkMode, setDarkMode] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [activeTab, setActiveTab] = useState("all"); // "all", "collections", "recent", "favorites", "missing", "archive"
+  const notificationRef = useRef(null);
 
   useEffect(() => {
     const init = async () => {
@@ -22,6 +25,19 @@ function App() {
       }
     };
     init();
+  }, []);
+
+  // Close notifications popover when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   const handleImport = async () => {
@@ -51,11 +67,25 @@ function App() {
     }
   };
 
+  const handleNavClick = (tabName, tag = '') => {
+    setActiveTab(tabName);
+    setSelectedTag(tag);
+  };
+
+  // Rescan Fonts handler
+  const handleRescan = async () => {
+    await scanSystemFonts();
+  };
+
   return (
-    <div className={`h-screen overflow-hidden flex select-none ${darkMode ? 'bg-[#121214] text-white dark' : 'bg-[#f5f5f7] text-[#1a1b1f]'}`}>
+    <div className={`h-screen overflow-hidden flex select-none transition-colors duration-300 ${
+      darkMode ? 'bg-[#121214] text-white dark' : 'bg-[#f5f5f7] text-[#1a1b1f]'
+    }`}>
       
       {/* SideNavBar Component */}
-      <aside className={`fixed left-0 top-0 h-full w-[250px] border-r border-black/5 flex flex-col py-8 px-4 z-50 transition-colors duration-300 ${darkMode ? 'bg-[#1c1c1e]/60 text-white/90 border-white/5' : 'glass-sidebar'}`}>
+      <aside className={`fixed left-0 top-0 h-full w-[250px] border-r flex flex-col py-8 px-4 z-50 transition-all duration-300 ${
+        darkMode ? 'bg-[#1c1c1e]/65 border-white/5 text-white/90' : 'glass-sidebar border-black/5'
+      }`}>
         
         {/* macOS Style Window Controls */}
         <div className="flex gap-2 mb-10 px-2">
@@ -88,69 +118,101 @@ function App() {
           </button>
         </div>
 
-        {/* Navigation */}
+        {/* Navigation Sidebar List */}
         <nav className="flex-1 space-y-0.5 overflow-y-auto custom-scrollbar pr-1">
-          <p className="text-[10px] text-on-surface-variant/40 uppercase font-bold tracking-widest px-3 mb-2">Main</p>
+          <p className="text-[10px] text-on-surface-variant/40 dark:text-white/30 uppercase font-bold tracking-widest px-3 mb-2">Main</p>
           
+          {/* All Fonts */}
           <button 
             className={`flex items-center gap-2.5 px-3 py-1.5 w-full rounded-lg text-left transition-colors ${
-              !selectedTag 
-                ? 'bg-[#0058bc]/10 text-[#0058bc] font-semibold' 
+              activeTab === "all"
+                ? 'bg-[#0058bc]/10 text-[#0058bc] dark:text-[#adc6ff] font-semibold' 
                 : darkMode ? 'text-white/60 hover:bg-white/5' : 'text-on-surface-variant hover:bg-black/5'
             }`}
-            onClick={() => setSelectedTag('')}
+            onClick={() => handleNavClick("all", "")}
           >
-            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: !selectedTag ? '"FILL" 1' : '"FILL" 0' }}>dashboard</span>
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: activeTab === "all" ? '"FILL" 1' : '"FILL" 0' }}>dashboard</span>
             <span className="text-[13px] font-medium">All Fonts</span>
           </button>
 
+          {/* Collections */}
           <button 
             className={`flex items-center gap-2.5 px-3 py-1.5 w-full rounded-lg text-left transition-colors ${
-              selectedTag === 'Favorites' 
-                ? 'bg-[#0058bc]/10 text-[#0058bc] font-semibold' 
+              activeTab === "collections"
+                ? 'bg-[#0058bc]/10 text-[#0058bc] dark:text-[#adc6ff] font-semibold' 
                 : darkMode ? 'text-white/60 hover:bg-white/5' : 'text-on-surface-variant hover:bg-black/5'
             }`}
-            onClick={() => setSelectedTag('Favorites')}
+            onClick={() => handleNavClick("collections", tags.filter(t => t !== 'Favorites')[0] || "Custom Collection")}
           >
-            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: selectedTag === 'Favorites' ? '"FILL" 1' : '"FILL" 0' }}>star</span>
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: activeTab === "collections" ? '"FILL" 1' : '"FILL" 0' }}>folder_special</span>
+            <span className="text-[13px] font-medium">Collections</span>
+          </button>
+
+          {/* Recent */}
+          <button 
+            className={`flex items-center gap-2.5 px-3 py-1.5 w-full rounded-lg text-left transition-colors ${
+              activeTab === "recent"
+                ? 'bg-[#0058bc]/10 text-[#0058bc] dark:text-[#adc6ff] font-semibold' 
+                : darkMode ? 'text-white/60 hover:bg-white/5' : 'text-on-surface-variant hover:bg-black/5'
+            }`}
+            onClick={() => handleNavClick("recent", "")}
+          >
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: activeTab === "recent" ? '"FILL" 1' : '"FILL" 0' }}>history</span>
+            <span className="text-[13px] font-medium">Recent</span>
+          </button>
+
+          {/* Favorites */}
+          <button 
+            className={`flex items-center gap-2.5 px-3 py-1.5 w-full rounded-lg text-left transition-colors ${
+              activeTab === "favorites"
+                ? 'bg-[#0058bc]/10 text-[#0058bc] dark:text-[#adc6ff] font-semibold' 
+                : darkMode ? 'text-white/60 hover:bg-white/5' : 'text-on-surface-variant hover:bg-black/5'
+            }`}
+            onClick={() => handleNavClick("favorites", "Favorites")}
+          >
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: activeTab === "favorites" ? '"FILL" 1' : '"FILL" 0' }}>star</span>
             <span className="text-[13px] font-medium">Favorites</span>
           </button>
 
-          {/* Dynamic Collections List */}
           <div className="h-px bg-black/5 dark:bg-white/5 my-4 mx-2"></div>
-          <p className="text-[10px] text-on-surface-variant/40 uppercase font-bold tracking-widest px-3 mb-2">Collections</p>
-          
-          {tags.filter(t => t !== 'Favorites').length === 0 ? (
-            <p className="text-[11px] text-on-surface-variant/30 italic px-3 py-1">No collections created</p>
-          ) : (
-            tags.filter(t => t !== 'Favorites').map(t => (
-              <button 
-                key={t}
-                className={`flex items-center gap-2.5 px-3 py-1.5 w-full rounded-lg text-left transition-colors ${
-                  selectedTag === t 
-                    ? 'bg-[#0058bc]/10 text-[#0058bc] font-semibold' 
-                    : darkMode ? 'text-white/60 hover:bg-white/5' : 'text-on-surface-variant hover:bg-black/5'
-                }`}
-                onClick={() => setSelectedTag(t)}
-              >
-                <span className="material-symbols-outlined text-[20px]">folder</span>
-                <span className="text-[13px] font-medium truncate">{t}</span>
-              </button>
-            ))
-          )}
+          <p className="text-[10px] text-on-surface-variant/40 dark:text-white/30 uppercase font-bold tracking-widest px-3 mb-2">System</p>
 
-          <div className="h-px bg-black/5 dark:bg-white/5 my-4 mx-2"></div>
-          <p className="text-[10px] text-on-surface-variant/40 uppercase font-bold tracking-widest px-3 mb-2">System</p>
-
+          {/* Missing */}
           <button 
-            onClick={scanSystemFonts}
-            disabled={isLoading}
             className={`flex items-center gap-2.5 px-3 py-1.5 w-full rounded-lg text-left transition-colors ${
+              activeTab === "missing"
+                ? 'bg-[#0058bc]/10 text-[#0058bc] dark:text-[#adc6ff] font-semibold' 
+                : darkMode ? 'text-white/60 hover:bg-white/5' : 'text-on-surface-variant hover:bg-black/5'
+            }`}
+            onClick={() => handleNavClick("missing", "")}
+          >
+            <span className="material-symbols-outlined text-[20px]">error_outline</span>
+            <span className="text-[13px] font-medium">Missing</span>
+          </button>
+
+          {/* Archive */}
+          <button 
+            className={`flex items-center gap-2.5 px-3 py-1.5 w-full rounded-lg text-left transition-colors ${
+              activeTab === "archive"
+                ? 'bg-[#0058bc]/10 text-[#0058bc] dark:text-[#adc6ff] font-semibold' 
+                : darkMode ? 'text-white/60 hover:bg-white/5' : 'text-on-surface-variant hover:bg-black/5'
+            }`}
+            onClick={() => handleNavClick("archive", "")}
+          >
+            <span className="material-symbols-outlined text-[20px]">archive</span>
+            <span className="text-[13px] font-medium">Archive</span>
+          </button>
+
+          {/* Rescan Fonts Button */}
+          <button 
+            onClick={handleRescan}
+            disabled={isLoading}
+            className={`flex items-center gap-2.5 px-3 py-1.5 w-full rounded-lg text-left mt-2 transition-colors ${
               isLoading ? 'opacity-50' : ''
             } ${darkMode ? 'text-white/60 hover:bg-white/5' : 'text-on-surface-variant hover:bg-black/5'}`}
           >
             <span className={`material-symbols-outlined text-[20px] ${isLoading ? 'animate-spin' : ''}`}>sync</span>
-            <span className="text-[13px] font-medium">{isLoading ? 'Scanning...' : 'Rescan System Fonts'}</span>
+            <span className="text-[13px] font-medium">{isLoading ? 'Scanning...' : 'Rescan Fonts'}</span>
           </button>
         </nav>
 
@@ -164,7 +226,7 @@ function App() {
           {/* User Profile */}
           <div className={`flex items-center gap-3 p-2 mt-4 rounded-xl cursor-pointer transition-all border ${
             darkMode 
-              ? 'bg-white/5 hover:bg-white/10 border-white/5' 
+              ? 'bg-[#2c2c2e]/40 hover:bg-[#2c2c2e]/60 border-white/5' 
               : 'bg-white/30 hover:bg-white/50 border-black/[0.03]'
           }`}>
             <img 
@@ -174,7 +236,7 @@ function App() {
             />
             <div className="flex-1 min-w-0">
               <p className="text-[13px] font-bold truncate">Alexander Vance</p>
-              <p className="text-[10px] text-[#0058bc] font-semibold">Premium</p>
+              <p className="text-[10px] text-[#0058bc] dark:text-[#adc6ff] font-semibold">Premium</p>
             </div>
             <span className="material-symbols-outlined text-on-surface-variant/40 text-[18px]">unfold_more</span>
           </div>
@@ -186,7 +248,7 @@ function App() {
         
         {/* TopNavBar Component */}
         <header className={`h-14 flex items-center justify-between px-6 border-b border-black/5 dark:border-white/5 sticky top-0 z-40 transition-colors duration-300 ${
-          darkMode ? 'bg-[#121214]/80' : 'glass-toolbar'
+          darkMode ? 'bg-[#121214]/80 border-white/5' : 'glass-toolbar border-black/5'
         }`}>
           <div className="flex items-center gap-4 flex-1">
             {/* Search */}
@@ -229,7 +291,7 @@ function App() {
                 className={`flex items-center justify-center p-1 rounded-md transition-all ${
                   !previewRtl 
                     ? darkMode ? 'bg-white/10 text-white' : 'bg-white shadow-sm text-[#0058bc]' 
-                    : 'text-on-surface-variant/50 hover:bg-black/5'
+                    : 'text-on-surface-variant/50 hover:bg-black/5 dark:hover:bg-white/5'
                 }`}
                 title="Left-to-Right"
               >
@@ -240,7 +302,7 @@ function App() {
                 className={`flex items-center justify-center p-1 rounded-md transition-all ${
                   previewRtl 
                     ? darkMode ? 'bg-white/10 text-white' : 'bg-white shadow-sm text-[#0058bc]' 
-                    : 'text-on-surface-variant/50 hover:bg-black/5'
+                    : 'text-on-surface-variant/50 hover:bg-black/5 dark:hover:bg-white/5'
                 }`}
                 title="Right-to-Left"
               >
@@ -264,9 +326,36 @@ function App() {
 
             <div className="w-px h-4 bg-black/10 dark:bg-white/10 mx-1"></div>
             
-            <button className="w-8 h-8 rounded-full text-on-surface-variant/70 hover:bg-black/5 dark:hover:bg-white/5 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[20px]">notifications</span>
-            </button>
+            {/* Notifications Bell and Elegant Popover */}
+            <div className="relative" ref={notificationRef}>
+              <button 
+                onClick={() => setShowNotifications(!showNotifications)}
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                  showNotifications 
+                    ? darkMode ? 'bg-white/10 text-[#adc6ff]' : 'bg-[#0058bc]/10 text-[#0058bc]'
+                    : darkMode ? 'text-white/70 hover:bg-white/5' : 'text-on-surface-variant/70 hover:bg-black/5'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[20px]">notifications</span>
+              </button>
+              
+              {showNotifications && (
+                <div className={`absolute right-0 top-10 w-64 border rounded-xl shadow-lg p-4 z-50 transition-all duration-300 animate-in fade-in slide-in-from-top-2 ${
+                  darkMode 
+                    ? 'bg-[#1c1c1e] border-white/10 text-white' 
+                    : 'bg-white border-black/10 text-[#1a1b1f]'
+                }`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="material-symbols-outlined text-[#0058bc] dark:text-[#adc6ff]">notifications_active</span>
+                    <span className="font-bold text-[13px] tracking-tight">Notifications</span>
+                  </div>
+                  <div className="h-px bg-black/5 dark:bg-white/5 my-2" />
+                  <p className="text-[12px] text-on-surface-variant/70 dark:text-white/60 text-center py-4 bg-black/[0.02] dark:bg-white/[0.02] rounded-lg border border-dashed border-black/5 dark:border-white/5">
+                    There is nothing yet
+                  </p>
+                </div>
+              )}
+            </div>
             
             {/* Dark Mode Toggle */}
             <button 
@@ -286,14 +375,22 @@ function App() {
 
         {/* Scrollable Canvas */}
         <div className="flex-1 overflow-y-auto custom-scrollbar px-10 py-8 flex flex-col">
-          {/* Section Header */}
+          {/* Tab Content Header */}
           <div className="flex justify-between mb-8 items-center">
             <div className="flex flex-col gap-1 min-w-0 pr-4">
               <h2 className="text-[32px] font-bold tracking-tight truncate">
-                {selectedTag ? `Collection: ${selectedTag}` : 'All Fonts'}
+                {activeTab === "all" && "All Fonts"}
+                {activeTab === "collections" && (selectedTag ? `Collection: ${selectedTag}` : "Collections")}
+                {activeTab === "recent" && "Recent Fonts"}
+                {activeTab === "favorites" && "Favorite Fonts"}
+                {activeTab === "missing" && "Missing Fonts"}
+                {activeTab === "archive" && "Archived Fonts"}
               </h2>
               <p className="text-[13px] text-on-surface-variant/60">
-                {fonts.length} {fonts.length === 1 ? 'font family' : 'font families'} in your vault
+                {activeTab === "recent" && "0 fonts opened recently"}
+                {activeTab === "missing" && "0 missing fonts detected"}
+                {activeTab === "archive" && "0 archived fonts"}
+                {activeTab !== "recent" && activeTab !== "missing" && activeTab !== "archive" && `${fonts.length} ${fonts.length === 1 ? 'font family' : 'font families'} in your vault`}
               </p>
             </div>
             
@@ -317,11 +414,31 @@ function App() {
 
           {/* Virtualized Cards Grid Container */}
           <div className="flex-1 flex flex-col">
-            <FontList />
+            {activeTab === "recent" || activeTab === "missing" || activeTab === "archive" ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center w-full flex-1">
+                <span className="material-symbols-outlined text-[64px] text-on-surface-variant/20 dark:text-white/20 mb-4">
+                  {activeTab === "recent" && "history"}
+                  {activeTab === "missing" && "error_outline"}
+                  {activeTab === "archive" && "archive"}
+                </span>
+                <h4 className="text-[18px] font-bold text-on-surface dark:text-white mb-1">
+                  {activeTab === "recent" && "No recent fonts"}
+                  {activeTab === "missing" && "No missing fonts"}
+                  {activeTab === "archive" && "No archived fonts"}
+                </h4>
+                <p className="text-[13px] text-on-surface-variant/50 dark:text-white/40 max-w-xs">
+                  {activeTab === "recent" && "Fonts you interact with or preview will appear here."}
+                  {activeTab === "missing" && "All indexed fonts are present and working correctly."}
+                  {activeTab === "archive" && "You haven't archived any font families yet."}
+                </p>
+              </div>
+            ) : (
+              <FontList />
+            )}
           </div>
 
           {/* Bottom library details section */}
-          {!selectedTag && (
+          {activeTab === "all" && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-10 pb-6 border-t border-black/5 dark:border-white/5 mt-8">
               {/* Featured Font Preview Panel */}
               <div className={`lg:col-span-2 border rounded-[24px] p-8 flex flex-col justify-between shadow-sm relative overflow-hidden group transition-all duration-300 ${
@@ -370,17 +487,17 @@ function App() {
                     </div>
                   </div>
                   <div className="space-y-4">
-                    <div className={`flex items-center justify-between p-3 rounded-xl ${darkMode ? 'bg-white/5' : 'bg-black/[0.02]'}`}>
+                    <div className={`flex items-center justify-between p-3 rounded-xl ${darkMode ? 'bg-[#2c2c2e]/40 border-white/5' : 'bg-black/[0.02]'}`}>
                       <div className="flex items-center gap-3">
                         <span className="material-symbols-outlined text-red-500 text-[20px]">broken_image</span>
-                        <span className="text-[13px] text-on-surface-variant">Broken Fonts</span>
+                        <span className="text-[13px] text-on-surface-variant dark:text-white/80">Broken Fonts</span>
                       </div>
                       <span className="font-bold">4</span>
                     </div>
-                    <div className={`flex items-center justify-between p-3 rounded-xl ${darkMode ? 'bg-white/5' : 'bg-black/[0.02]'}`}>
+                    <div className={`flex items-center justify-between p-3 rounded-xl ${darkMode ? 'bg-[#2c2c2e]/40 border-white/5' : 'bg-black/[0.02]'}`}>
                       <div className="flex items-center gap-3">
                         <span className="material-symbols-outlined text-amber-500 text-[20px]">content_copy</span>
-                        <span className="text-[13px] text-on-surface-variant">Duplicates</span>
+                        <span className="text-[13px] text-on-surface-variant dark:text-white/80">Duplicates</span>
                       </div>
                       <span className="font-bold">12</span>
                     </div>

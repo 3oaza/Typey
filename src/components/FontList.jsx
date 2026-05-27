@@ -17,22 +17,23 @@ export const FontList = () => {
     return chunks;
   }, [fonts]);
 
+  // Set the height of the row to perfectly match the actual content height, removing the empty gaps!
   const rowVirtualizer = useVirtualizer({
     count: chunkedFonts.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => Math.max(280, previewSize + 180),
+    estimateSize: () => Math.max(220, previewSize + 140),
     overscan: 5,
   });
 
   if (fonts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center w-full">
-        <span className="material-symbols-outlined text-[64px] text-on-surface-variant/20 mb-4">
+        <span className="material-symbols-outlined text-[64px] text-on-surface-variant/20 dark:text-white/20 mb-4">
           text_fields
         </span>
-        <h4 className="text-[18px] font-bold text-on-surface mb-1">No fonts found</h4>
-        <p className="text-[13px] text-on-surface-variant/50 max-w-xs">
-          Import a folder of fonts or click "Rescan System Fonts" to index your local system fonts.
+        <h4 className="text-[18px] font-bold text-on-surface dark:text-white mb-1">No fonts found</h4>
+        <p className="text-[13px] text-on-surface-variant/50 dark:text-white/40 max-w-xs">
+          Import a folder of fonts or click "Rescan Fonts" to index your local system fonts.
         </p>
       </div>
     );
@@ -62,10 +63,10 @@ export const FontList = () => {
                 width: '100%',
                 height: `${virtualItem.size}px`,
                 transform: `translateY(${virtualItem.start}px)`,
-                paddingBottom: '24px', // Gap between rows
+                paddingBottom: '20px', // Gap between rows (no empty dead space!)
               }}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full h-full">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full h-full pb-5">
                 {rowChunk.map((font) => (
                   <div key={font.id || font.family} className="h-full">
                     <FontCard font={font} />

@@ -108,17 +108,16 @@ export const FontCard = ({ font }) => {
     }
   };
 
-  // Get font classification or designer fallback
   const designer = font.designer || "System Font";
   const type = font.classification || (font.mono ? "Monospace" : "Sans Serif");
 
   return (
-    <div className="font-card bg-white p-6 rounded-[20px] shadow-sm hover:shadow-md border border-black/5 transition-all group relative flex flex-col justify-between h-full min-h-[260px]">
+    <div className="font-card bg-white dark:bg-[#1c1c1e] p-6 rounded-[20px] shadow-sm hover:shadow-md border border-black/5 dark:border-white/5 transition-all duration-300 group relative flex flex-col justify-between h-full">
       <div>
         <div className="flex justify-between items-start mb-4">
           <div className="min-w-0 flex-1 pr-4">
-            <h3 className="font-bold text-on-surface text-[16px] truncate" title={font.family}>{font.family}</h3>
-            <p className="text-[11px] text-on-surface-variant/50 truncate" title={`${designer} • ${type}`}>
+            <h3 className="font-bold text-on-surface dark:text-white text-[16px] truncate" title={font.family}>{font.family}</h3>
+            <p className="text-[11px] text-on-surface-variant/50 dark:text-white/40 truncate" title={`${designer} • ${type}`}>
               {designer} • {type}
             </p>
           </div>
@@ -126,7 +125,7 @@ export const FontCard = ({ font }) => {
           <div className="flex items-center gap-1.5" ref={dropdownRef}>
             {/* Add to collection dropdown trigger */}
             <button 
-              className="p-1.5 rounded-full hover:bg-black/5 text-on-surface-variant/40 hover:text-primary transition-all relative"
+              className="p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/5 text-on-surface-variant/40 dark:text-white/40 hover:text-[#0058bc] dark:hover:text-[#adc6ff] transition-all relative"
               onClick={(e) => {
                 e.stopPropagation();
                 setShowDropdown(!showDropdown);
@@ -137,33 +136,33 @@ export const FontCard = ({ font }) => {
               
               {showDropdown && (
                 <div 
-                  className="absolute right-0 top-8 w-48 bg-white border border-black/10 rounded-xl shadow-lg p-2 z-50 text-left" 
+                  className="absolute right-0 top-8 w-48 bg-white dark:bg-[#1e1e20] border border-black/10 dark:border-white/10 rounded-xl shadow-lg p-2 z-50 text-left" 
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="text-[10px] font-bold text-on-surface-variant/40 uppercase px-2 py-1">Add to Folder</div>
-                  <div className="h-px bg-black/5 my-1" />
+                  <div className="text-[10px] font-bold text-on-surface-variant/40 dark:text-white/40 uppercase px-2 py-1">Add to Folder</div>
+                  <div className="h-px bg-black/5 dark:bg-white/5 my-1" />
                   
                   <div className="max-h-32 overflow-y-auto custom-scrollbar">
                     {allCollections.filter(c => c !== 'Favorites').length === 0 ? (
-                      <div className="text-[11px] text-on-surface-variant/50 px-2 py-1.5">No folders created yet.</div>
+                      <div className="text-[11px] text-on-surface-variant/50 dark:text-white/40 px-2 py-1.5">No folders created yet.</div>
                     ) : (
                       allCollections.filter(c => c !== 'Favorites').map(c => {
                         const hasTag = tags.includes(c);
                         return (
                           <button 
                             key={c}
-                            className="w-full flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-black/5 text-left text-label-md text-on-surface-variant transition-colors" 
+                            className="w-full flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-black/5 dark:hover:bg-white/5 text-left text-[12px] text-on-surface-variant dark:text-white/80 transition-colors" 
                             onClick={(e) => toggleCollectionTag(c, e)}
                           >
                             <span className="truncate">📁 {c}</span>
-                            {hasTag && <span className="material-symbols-outlined text-primary text-[14px]">check</span>}
+                            {hasTag && <span className="material-symbols-outlined text-[#0058bc] dark:text-[#adc6ff] text-[14px]">check</span>}
                           </button>
                         );
                       })
                     )}
                   </div>
                   
-                  <div className="h-px bg-black/5 my-1" />
+                  <div className="h-px bg-black/5 dark:bg-white/5 my-1" />
                   
                   {showTagInput ? (
                     <div className="px-1 py-1">
@@ -173,13 +172,13 @@ export const FontCard = ({ font }) => {
                         value={newTag}
                         onChange={(e) => setNewTag(e.target.value)}
                         onKeyDown={handleAddTag}
-                        className="w-full bg-black/5 border border-black/10 rounded px-2 py-1 text-[12px] outline-none focus:ring-1 focus:ring-primary/20"
+                        className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded px-2 py-1 text-[12px] text-on-surface dark:text-white outline-none focus:ring-1 focus:ring-[#0058bc]/20"
                         autoFocus
                       />
                     </div>
                   ) : (
                     <button 
-                      className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md hover:bg-black/5 text-left text-label-md text-primary font-semibold transition-colors"
+                      className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md hover:bg-black/5 dark:hover:bg-white/5 text-left text-[12px] text-[#0058bc] dark:text-[#adc6ff] font-semibold transition-colors"
                       onClick={() => setShowTagInput(true)}
                     >
                       <span className="material-symbols-outlined text-[14px]">add</span>
@@ -192,7 +191,7 @@ export const FontCard = ({ font }) => {
 
             {/* Favorite Star Button */}
             <button 
-              className={`favorite-btn ${isFavorite ? 'opacity-100 text-amber-500' : 'opacity-0 group-hover:opacity-100 text-on-surface-variant/40 hover:text-amber-500'} p-1.5 rounded-full hover:bg-black/5 transition-all`}
+              className={`favorite-btn ${isFavorite ? 'opacity-100 text-amber-500' : 'opacity-0 group-hover:opacity-100 text-on-surface-variant/40 dark:text-white/40 hover:text-amber-500'} p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-all`}
               onClick={toggleFavorite}
               title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
             >
@@ -213,7 +212,7 @@ export const FontCard = ({ font }) => {
               value={selectedStyleIndex} 
               onChange={(e) => setSelectedStyleIndex(Number(e.target.value))}
               onClick={(e) => e.stopPropagation()}
-              className="bg-black/5 hover:bg-black/10 border-none rounded-lg px-2.5 py-1 font-label-md text-[11px] text-on-surface-variant cursor-pointer outline-none transition-all"
+              className="bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border-none rounded-lg px-2.5 py-1 text-[11px] text-on-surface-variant dark:text-white/70 cursor-pointer outline-none transition-all"
             >
               {styles.map((s, idx) => (
                 <option key={s.id} value={idx}>
@@ -226,9 +225,9 @@ export const FontCard = ({ font }) => {
       </div>
 
       {/* Font Preview Text */}
-      <div className="flex-1 flex items-center overflow-hidden py-4 min-h-[90px]">
+      <div className="flex-1 flex items-center overflow-hidden py-4">
         <p 
-          className="font-preview text-on-surface leading-snug w-full break-words"
+          className="font-preview text-on-surface dark:text-white leading-snug w-full break-words"
           dir={previewRtl ? "rtl" : "ltr"}
           style={{
             fontFamily: loaded ? `"${fontFamilyName}", sans-serif` : 'sans-serif',
@@ -244,23 +243,23 @@ export const FontCard = ({ font }) => {
       </div>
 
       {/* Footer tags & check indicator */}
-      <div className="flex items-center justify-between mt-4 pt-3 border-t border-black/[0.03]">
+      <div className="flex items-center justify-between mt-4 pt-3 border-t border-black/[0.03] dark:border-white/[0.03]">
         <div className="flex flex-wrap gap-1.5">
           {font.is_variable && (
-            <span className="px-2 py-0.5 rounded bg-black/5 text-on-surface-variant text-[9px] font-bold uppercase tracking-wide">
+            <span className="px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 text-on-surface-variant dark:text-white/50 text-[9px] font-bold uppercase tracking-wide">
               Variable
             </span>
           )}
           {font.has_arabic && (
-            <span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-[9px] font-bold uppercase tracking-wide">
+            <span className="px-2 py-0.5 rounded bg-[#0058bc]/10 dark:bg-[#adc6ff]/10 text-[#0058bc] dark:text-[#adc6ff] text-[9px] font-bold uppercase tracking-wide">
               Arabic
             </span>
           )}
-          <span className="px-2 py-0.5 rounded bg-black/5 text-on-surface-variant text-[9px] font-bold uppercase tracking-wide">
+          <span className="px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 text-on-surface-variant dark:text-white/50 text-[9px] font-bold uppercase tracking-wide">
             {styles.length} {styles.length > 1 ? 'Styles' : 'Style'}
           </span>
         </div>
-        <span className="material-symbols-outlined text-primary/30 group-hover:text-primary transition-colors text-[20px]" style={{ fontVariationSettings: '"FILL" 1' }}>
+        <span className="material-symbols-outlined text-[#0058bc]/30 dark:text-[#adc6ff]/30 group-hover:text-[#0058bc] dark:group-hover:text-[#adc6ff] transition-colors text-[20px]" style={{ fontVariationSettings: '"FILL" 1' }}>
           check_circle
         </span>
       </div>
