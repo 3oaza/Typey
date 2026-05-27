@@ -1,4 +1,7 @@
-/* Reset styles - Main UI logic in App.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 * {
   box-sizing: border-box;
 }
@@ -10,4 +13,51 @@ body, html {
   height: 100vh;
   overflow: hidden;
   background-color: transparent;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #faf9fe;
+    color: #1a1b1f;
+    -webkit-font-smoothing: antialiased;
+}
+
+.glass-sidebar {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+}
+
+.glass-toolbar {
+    background: rgba(250, 249, 254, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+}
+
+.font-card:hover .favorite-btn {
+    opacity: 1;
+}
+
+.slider-thumb::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 14px;
+    width: 14px;
+    border-radius: 50%;
+    background: #0058bc;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    border: 1.5px solid white;
 }
